@@ -72,12 +72,12 @@ sub to_c_struct
   foreach my $entry (@data)
   {
     my($port, $index, $value) = @$entry;
-    $str .= sprintf "  { 0x%x, 0x%x, 0x%x},\n", $port, $index, $value;
+    $str .= sprintf "  { 0x%x, 0x%x, 0x%x },\n", $port, $index, $value;
   }
 
   {
     my($port, $index, $value) = @$last;
-    $str .= sprintf "  { 0x%x, 0x%x, 0x%x}\n", $port, $index, $value;
+    $str .= sprintf "  { 0x%x, 0x%x, 0x%x }\n", $port, $index, $value;
   }
   $str .= "};";
 
