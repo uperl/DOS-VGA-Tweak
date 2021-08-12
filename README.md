@@ -46,6 +46,17 @@ This converts the tweak data into a C struct which can be used with
 application.  The output should be equivalent C code, but may vary in
 spacing.
 
+## to\_c\_function
+
+```perl
+my $c_code = $tweak->to_c_function;
+my $c_code = $tweak->to_c_function($name);
+```
+
+This converts the tweak data into a standalone C function.  This function
+should be usable in Borland or Turbo C/C++, though may work with other
+compilers.
+
 # SEE ALSO
 
 [http://bbc.nvg.org/private/programming.html](http://bbc.nvg.org/private/programming.html)

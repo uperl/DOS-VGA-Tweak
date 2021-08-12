@@ -33,6 +33,12 @@ subtest 'basic' => sub {
     }
   };
 
+  subtest 'to_c_function' => sub {
+
+    note $tweak->to_c_function;
+    pass 'okay';
+  };
+
 };
 
 done_testing;
