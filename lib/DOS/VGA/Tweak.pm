@@ -84,9 +84,9 @@ spacing.
 
 sub to_c_struct
 {
-  my($self, $array) = @_;
-  $array = 'tweak_registers' unless defined $array;
-  my $str = "#include \"TwkUser.h\" // get Register definition\nRegister $array\[] =\n{\n";
+  my($self, $name) = @_;
+  $name = 'tweak_registers' unless defined $name;
+  my $str = "#include \"TwkUser.h\" // get Register definition\nRegister $name\[] =\n{\n";
 
   my @data = @{ $self->{data} };
   my $last = pop @data;
@@ -102,6 +102,75 @@ sub to_c_struct
     $str .= sprintf "  { 0x%x, 0x%x, 0x%x }\n", $port, $index, $value;
   }
   $str .= "};";
+
+  return $str;
+}
+
+=head2 to_c_function
+
+ my $c_code = $tweak->to_c_function;
+ my $c_code = $tweak->to_c_function($name);
+
+This converts the tweak data into a standalone C function.  This function
+should be usable in Borland or Turbo C/C++, though may work with other
+compilers.
+
+=cut
+
+sub to_c_function
+{
+  my($self, $name) = @_;
+  $name = 'tweak_registers' unless defined $name;
+
+  my $str = <<EOF;
+#include <dos.h>
+
+void
+$name(void)
+{
+
+  /*
+   * initialization to make the VGA ready to accept any
+   * combination of configuration register settings.
+   *
+   * This involves enabling writes to index 0-7 of the CRT
+   * controller (port 0x3d4), by clearing the most significant
+   * bit (bit 7) of the index 0x11
+   */
+
+  {
+    int v;
+    outportb(0x3d4,0x11);
+    v = inportb(0x3d5) & 0x7f;
+    outportb(0x3d4,0x11);
+    outportb(0x3d5,v);
+  }
+EOF
+
+  foreach my $entry (@{ $self->{data} })
+  {
+    my($port, $index, $value) = @$entry;
+
+    $str .= sprintf "\n  /* port: 0x%04x index: 0x%02x value: 0x%02x */;\n", $port, $index, $value;
+
+    if($port == ATTRCON_ADDR)
+    {
+      $str .= "  inportb(0x3da);          /* reset read/write flip-flop */\n";
+      $str .= sprintf "  outportb(0x%04x, 0x%02x);  /* ensure VGA output is enabled */\n", $port, $index | 0x20;
+      $str .= sprintf "  outportb(0x%04x, 0x%02x);\n", $port, $value;
+    }
+    elsif($port == MISC_ADDR || VGAENABLE_ADDR)
+    {
+      $str .= sprintf "  outportb(0x%04x, 0x%02x);  /* directly to the port */\n", $port, $value;
+    }
+    else
+    {
+      $str .= sprintf "  outportb(0x%04x, 0x%02x);  /* index to port */\n", $port, $index;
+      $str .= sprintf "  outportb(0x%04x, 0x%02x);  /* value to port+1 */\n", $port+1, $value;
+    }
+  }
+
+  $str .= "}\n";
 
   return $str;
 }
