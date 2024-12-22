@@ -2,4 +2,7 @@ DOS-VGA-Tweak-*
 /.build/
 *.swp
 
-
+/DOS-VGA-Tweak-*
+/.build
+*.old
+*.orig
